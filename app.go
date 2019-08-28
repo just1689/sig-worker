@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/just1689/entity-sync/es/esq"
 	"github.com/just1689/entity-sync/es/shared"
+	"net/http"
 	"os"
 	"sig-worker/bus"
 	"sig-worker/domain"
@@ -16,17 +18,29 @@ var queueHandlers = map[string]func(data []byte){
 	domain.QueueCarPageV1:        bus.ProcessCarPage,
 }
 
+var okBytes, _ = json.Marshal(struct {
+	OK bool `json:"ok"`
+}{
+	OK: true,
+})
+
 func main() {
 	queue := os.Getenv("queue")
 	if queue == "" {
 		panic(errors.New("could not find queue env var - empty"))
 	}
 
-	f := esq.BuildSubscriber(os.Getenv("nsqAddr"))
 	handler, ok := queueHandlers[queue]
-	if !ok {
+	if !ok || handler == nil {
 		panic(errors.New("could not find function to handle queue for " + queue))
 	}
-	f(shared.EntityType(queue), handler)
+
+	builder := esq.BuildSubscriber(os.Getenv("nsqAddr"))
+	builder(shared.EntityType(queue), handler)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(okBytes)
+	})
+	panic(http.ListenAndServe(os.Getenv("listenAddr"), nil))
 
 }
