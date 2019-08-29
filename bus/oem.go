@@ -25,11 +25,17 @@ func ProcessAllOEMs(data []byte) {
 	persist.AsyncChanToWriter(q, writer)
 	defer close(q)
 
+	log.Println("All OEMs -> connecting to queue")
+	qS := make(chan []byte, 100)
+	persist.AsyncChanToWriter(q, persist.GetQueueWriter(domain.QueueSIGUI))
+	defer close(qS)
+
 	log.Println("All OEMs -> getting all oems")
 	c := scrape.GetAllOEMs(domain.GetOEMURL())
 	for row := range c {
 		w <- string(row)
 		q <- []byte(row)
+		qS <- []byte(row)
 		log.Println("All OEMs -> read...", row)
 	}
 
