@@ -12,7 +12,7 @@ import (
 
 var name = os.Getenv("queue")
 
-func ProcessCarPage(data []byte) {
+func ProcessCarPage(m map[string]string) {
 	log.Println("Car page -> starting")
 	url := string(data)
 	vehicle, remoteImage := scrape.GetCarDetail(url)

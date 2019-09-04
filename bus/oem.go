@@ -1,6 +1,7 @@
 package bus
 
 import (
+	"github.com/sirupsen/logrus"
 	"log"
 	"os"
 	"sig-worker/domain"
@@ -8,9 +9,14 @@ import (
 	"sig-worker/scrape"
 )
 
-func ProcessAllOEMs(data []byte) {
+func ProcessAllOEMs(m map[string]string) {
 
 	log.Println("All OEMs -> starting")
+
+	logrus.Println("ProcessAllOEMs...")
+	for ke, va := range m {
+		logrus.Println(ke, " : ", va)
+	}
 
 	//TODO: use fan-out pattern to ensure
 
@@ -43,7 +49,7 @@ func ProcessAllOEMs(data []byte) {
 
 }
 
-func ProcessOEMPage(data []byte) {
+func ProcessOEMPage(m map[string]string) {
 	url := string(data)
 	log.Println("OEM page -> starting")
 
@@ -62,7 +68,7 @@ func ProcessOEMPage(data []byte) {
 
 }
 
-func ProcessOEMPageResultUrl(data []byte) {
+func ProcessOEMPageResultUrl(m map[string]string) {
 	log.Println("OEM page results -> starting")
 	log.Println("OEM page results -> connecting to queue")
 	q := make(chan []byte, 100)
